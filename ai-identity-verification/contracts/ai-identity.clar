@@ -15,3 +15,42 @@
 
 ;; Data Variables
 (define-data-var next-verification-id uint u0)
+
+;; Data Maps
+(define-map identities
+  { user: principal }
+  {
+    registered-block: uint,
+    active: bool,
+    verification-count: uint
+  }
+)
+
+(define-map issuers
+  { issuer: principal }
+  {
+    name: (string-ascii 50),
+    active: bool,
+    verifications-issued: uint
+  }
+)
+
+(define-map verifications
+  { verification-id: uint }
+  {
+    user: principal,
+    issuer: principal,
+    attribute-type: (string-ascii 30),
+    issued-block: uint,
+    expiry-block: uint,
+    valid: bool
+  }
+)
+
+(define-map user-verifications
+  { user: principal, attribute-type: (string-ascii 30) }
+  {
+    verification-id: uint,
+    issuer: principal
+  }
+)
