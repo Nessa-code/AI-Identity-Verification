@@ -111,3 +111,100 @@
     err-attribute-not-found
   )
 )
+
+;; Public functions
+(define-public (register-identity)
+  (let
+    (
+      (existing (get-identity tx-sender))
+    )
+    (asserts! (is-none existing) err-already-registered)
+    (map-set identities
+      { user: tx-sender }
+      {
+        registered-block: stacks-block-height,
+        active: true,
+        verification-count: u0
+      }
+    )
+    (ok true)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-public (register-issuer (name (string-ascii 50)))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (map-set issuers
+      { issuer: tx-sender }
+      {
+        name: name,
+        active: true,
+        verifications-issued: u0
+      }
+    )
+    (ok true)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-public (authorize-issuer (issuer principal) (name (string-ascii 50)))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (map-set issuers
+      { issuer: issuer }
+      {
+        name: name,
+        active: true,
+        verifications-issued: u0
+      }
+    )
+    (ok true)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-public (issue-verification (user principal) (attribute-type (string-ascii 30)))
+  (let
+    (
+      (verification-id (var-get next-verification-id))
+      (issuer-info (unwrap! (get-issuer tx-sender) err-invalid-issuer))
+      (user-identity (unwrap! (get-identity user) err-not-registered))
+    )
+    (asserts! (get active issuer-info) err-not-authorized)
+    (asserts! (get active user-identity) err-not-registered)
+    
+    (map-set verifications
+      { verification-id: verification-id }
+      {
+        user: user,
+        issuer: tx-sender,
+        attribute-type: attribute-type,
+        issued-block: stacks-block-height,
+        expiry-block: (+ stacks-block-height verification-validity),
+        valid: true
+      }
+    )
+    
+    (map-set user-verifications
+      { user: user, attribute-type: attribute-type }
+      {
+        verification-id: verification-id,
+        issuer: tx-sender
+      }
+    )
+    
+    (map-set issuers
+      { issuer: tx-sender }
+      (merge issuer-info { verifications-issued: (+ (get verifications-issued issuer-info) u1) })
+    )
+    
+    (map-set identities
+      { user: user }
+      (merge user-identity { verification-count: (+ (get verification-count user-identity) u1) })
+    )
+    
+    (var-set next-verification-id (+ verification-id u1))
+    (ok verification-id)
+  )
+)
