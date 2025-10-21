@@ -1,30 +1,17 @@
+;; AIIdentity Verification - Privacy-preserving identity verification system
 
-;; title: ai-identity
-;; version:
-;; summary:
-;; description:
+;; Constants
+(define-constant contract-owner tx-sender)
+(define-constant err-owner-only (err u200))
+(define-constant err-not-registered (err u201))
+(define-constant err-already-registered (err u202))
+(define-constant err-not-authorized (err u203))
+(define-constant err-invalid-issuer (err u204))
+(define-constant err-verification-expired (err u205))
+(define-constant err-attribute-not-found (err u206))
 
-;; traits
-;;
+;; Verification validity period in blocks
+(define-constant verification-validity u52560)
 
-;; token definitions
-;;
-
-;; constants
-;;
-
-;; data vars
-;;
-
-;; data maps
-;;
-
-;; public functions
-;;
-
-;; read only functions
-;;
-
-;; private functions
-;;
-
+;; Data Variables
+(define-data-var next-verification-id uint u0)
